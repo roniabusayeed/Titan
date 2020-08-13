@@ -2,6 +2,20 @@
 #include <GLFW/glfw3.h>
 #include <iostream>
 
+#define WINDOW_WIDTH 800
+#define WINDOW_HEIGHT 600
+
+void FrameBufferSizeCallback(GLFWwindow* window, int width, int height)
+{
+    glViewport(0, 0, width, height);
+}
+
+void ProcessInput(GLFWwindow* window)
+{
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_TRUE)
+        glfwSetWindowShouldClose(window, true);
+}
+
 int main(void)
 {
     // Initialize GLFW library.
@@ -31,10 +45,15 @@ int main(void)
         return 3;
     }
 
+    // Set viewport dimensions.
+    glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
+    // Adjust viewport as the window resizes.
+    glfwSetFramebufferSizeCallback(window, FrameBufferSizeCallback);
 
     // Render loop.
     while (!glfwWindowShouldClose(window))
     {
+        ProcessInput(window);
         glClear(GL_COLOR_BUFFER_BIT);
 
         // Swap buffers and poll events.
