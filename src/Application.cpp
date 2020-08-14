@@ -7,6 +7,7 @@
 #include <cassert>
 
 #include "Shader.h"
+#include "VertexBuffer.h"
 
 #define WINDOW_WIDTH 800
 #define WINDOW_HEIGHT 600
@@ -72,12 +73,8 @@ int main(void)
     glGenVertexArrays(1, &vao);
 
     // VBO
-    unsigned int vbo;
-    glGenBuffers(1, &vbo);
-    glBindVertexArray(vao);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);     // tracked by vao.
-    glBindVertexArray(0);
-    glBufferData(GL_ARRAY_BUFFER, 3 * 6 * sizeof(float), vertices, GL_STATIC_DRAW);
+    VertexBuffer* vb = new VertexBuffer(vertices, sizeof(vertices));
+    vb->Bind();
 
     glBindVertexArray(vao);
     glVertexAttribPointer(0, 3, GL_FLOAT, false, 6 * sizeof(float), (const void*)0);    // tracked by vao.
@@ -107,7 +104,7 @@ int main(void)
     }
 
     // Clean up.
-    glDeleteBuffers(1, &vbo);
+    delete vb;
     glDeleteVertexArrays(1, &vao);
     delete program;
     glfwTerminate();
