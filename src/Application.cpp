@@ -6,19 +6,11 @@
 #include <string>
 #include <cassert>
 
+#include "Shader.h"
+
 #define WINDOW_WIDTH 800
 #define WINDOW_HEIGHT 600
 #define SHADER_PATH "res/shaders/source.shader"
-
-// Defines a shader source object.
-struct ShaderSource
-{
-    std::string vertexShader;
-    std::string fragmentShader;
-};
-
-ShaderSource ParseShader(const std::string& filePath);
-unsigned int CompileShader(unsigned int type, const std::string& source);
 
 void FrameBufferSizeCallback(GLFWwindow* window, int width, int height)
 {
@@ -95,13 +87,8 @@ int main(void)
     glBindVertexArray(0);
 
     // Shader.
-    ShaderSource shader = ParseShader(SHADER_PATH);
-    unsigned int vertexShader = CompileShader(GL_VERTEX_SHADER, shader.vertexShader);
-    unsigned int fragmentShader = CompileShader(GL_FRAGMENT_SHADER, shader.fragmentShader);
-    unsigned int program = glCreateProgram();
-    glAttachShader(program, vertexShader);
-    glAttachShader(program, fragmentShader);
-    glLinkProgram(program);
+    Shader* program = new Shader(SHADER_PATH);
+    program->Bind(); // Binding once (outside render loop) as we are not gonna use other shaders for now.
     
 
     // Render loop.
@@ -112,7 +99,6 @@ int main(void)
 
         // Render.
         glBindVertexArray(vao); // Bind vao.
-        glUseProgram(program);  // Bind the shader.
         glDrawArrays(GL_TRIANGLES, 0, 3);   // Issue draw call.
 
         // Swap buffers and poll events.
@@ -123,79 +109,7 @@ int main(void)
     // Clean up.
     glDeleteBuffers(1, &vbo);
     glDeleteVertexArrays(1, &vao);
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
-    glDeleteProgram(program);
+    delete program;
     glfwTerminate();
     return 0;
-}
-
-ShaderSource ParseShader(const std::string& filePath)
-{
-    enum class ShaderType
-    {
-        NONE = -1,
-        VERTEX_SHADER = 0,
-        FRAGMENT_SHADER = 1,
-    };
-
-    std::ifstream stream(filePath);
-    if (!stream.is_open())
-        assert(false);
-
-    ShaderType type = ShaderType::NONE;
-    std::stringstream ss[2];
-    std::string line;
-    while (std::getline(stream, line))
-    {
-        if (line.find("#shader") != std::string::npos)
-        {
-            if (line.find("vertex") != std::string::npos)
-                type = ShaderType::VERTEX_SHADER;
-            else if (line.find("fragment") != std::string::npos)
-                type = ShaderType::FRAGMENT_SHADER;
-
-            continue;
-        }
-
-        if (type != ShaderType::NONE)
-            ss[(int)type] << line << '\n';
-    }
-
-    stream.close();
-    return { ss[0].str(), ss[1].str() };
-}
-
-unsigned int CompileShader(unsigned int type, const std::string& source)
-{
-    unsigned int shader = glCreateShader(type);
-    const char* src = source.c_str();
-    glShaderSource(shader, 1, &src, nullptr);
-    glCompileShader(shader);
-
-    // Handle shader compilation errors.
-    int success;
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-    if (!success)
-    {
-        int length;
-        glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &length);
-        char* infoLog = new char[length];
-        glGetShaderInfoLog(shader, length, nullptr, infoLog);
-
-        std::string shaderType;
-        if (type == GL_VERTEX_SHADER)
-            shaderType = "Vertex";
-        else if (type == GL_FRAGMENT_SHADER)
-            shaderType = "Fragment";
-
-        std::cout << "[" << shaderType << " Shader Compilation Error] " <<
-            infoLog << std::endl;
-        delete[] infoLog;
-
-        assert(false);
-        return 0;
-    }
-
-    return shader;
 }
