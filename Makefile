@@ -33,10 +33,14 @@ VertexBufferLayout.o: VertexBufferLayout.cpp VertexBufferLayout.h
 VertexArray.o: VertexArray.cpp VertexArray.h
 	${CC} ${CFLAGS} -I${GLAD_HEADER_PATH} -c $<
 
-Application: Application.o glad.o Shader.o VertexBuffer.o VertexBufferLayout.o VertexArray.o
+Application: Application.o glad.o Shader.o VertexBuffer.o\
+			 VertexBufferLayout.o VertexArray.o IndexBuffer.o
 	${CC} ${CFLAGS} -o $@ $^ -L${GLFW_LIBRARY_PATH} -lglfw3 -lGL -lX11 -lpthread -lXrandr -lXi -ldl
 
 VertexBuffer.o: VertexBuffer.cpp VertexBuffer.h
+	${CC} ${CFLAGS} -I${GLAD_HEADER_PATH} -c $<
+
+IndexBuffer.o: IndexBuffer.cpp IndexBuffer.h
 	${CC} ${CFLAGS} -I${GLAD_HEADER_PATH} -c $<
 
 clean:

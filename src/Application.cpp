@@ -10,6 +10,7 @@
 #include "VertexBuffer.h"
 #include "VertexBufferLayout.h"
 #include "VertexArray.h"
+#include "IndexBuffer.h"
 
 #define WINDOW_WIDTH 800
 #define WINDOW_HEIGHT 600
@@ -64,10 +65,17 @@ int main(void)
 
     // Vertex data
     float vertices[] = {
-        // Positions        Color
-        -.5f, -.5f, 0.f,    0.f, 1.f, 0.f,
-         0.f,  .5f, 0.f,    0.f, 1.f, 0.f,
-         .5f, -.5f, 0.f,    0.f, 0.f, 1.f,
+        // Positions            Color
+        0.5f,   0.5f,  0.0f,      1.f, 1.f, 0.f,  //0
+        0.5f,  -0.5f,  0.0f,      1.f, 0.f, 0.f,  //1
+       -0.5f,  -0.5f,  0.0f,      1.f, .5f, 0.f,  //2
+       -0.5f,   0.5f,  0.0f,      1.f, 0.f, 0.7f,  //3
+    };
+
+    // Indexed drawing.
+    unsigned int indices[] = {
+        0, 1, 3,
+        1, 2, 3,
     };
 
     // VBO
@@ -78,7 +86,11 @@ int main(void)
     layout.Push<float>(3);
 
     VertexArray* vao = new VertexArray(*vb, layout);
+    
+
+    IndexBuffer* ibo = new IndexBuffer(indices, 6);
     vao->Bind();
+    ibo->Bind();
 
     // Shader.
     Shader* program = new Shader(SHADER_PATH);
@@ -92,7 +104,7 @@ int main(void)
         glClear(GL_COLOR_BUFFER_BIT);
 
         // Render.
-        glDrawArrays(GL_TRIANGLES, 0, 3);   // Issue draw call.
+        glDrawElements(GL_TRIANGLES, ibo->Count(), GL_UNSIGNED_INT, 0);
 
         // Swap buffers and poll events.
         glfwSwapBuffers(window);
@@ -102,6 +114,7 @@ int main(void)
     // Clean up.
     delete vb;
     delete vao;
+    delete ibo;
     delete program;
     glfwTerminate();
     return 0;
