@@ -14,7 +14,8 @@ void main()
 #version 330 core
 out vec4 fragColor;
 in vec3 v_color;
+uniform float u_color;
 void main()
 {
-    fragColor = vec4(v_color, 1.f);
+    fragColor = vec4(vec3(.9f, u_color, .2f), 1.f);
 }

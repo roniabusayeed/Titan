@@ -5,6 +5,7 @@
 #include <sstream>
 #include <string>
 #include <cassert>
+#include <cmath>
 
 #include "Shader.h"
 #include "VertexBuffer.h"
@@ -102,12 +103,20 @@ int main(void)
     Shader* program = new Shader(SHADER_PATH);
     program->Bind(); // Binding once (outside render loop) as we are not gonna use other shaders for now.
     
+    // Maximum vertex attributes suported on this machine's hardware.
+    int maxVertexAttribs;
+    glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, & maxVertexAttribs);
+    std::cout << "Max vertex attributes: " << maxVertexAttribs << std::endl;
 
     // Render loop.
     while (!glfwWindowShouldClose(window))
     {
         ProcessInput(window);
         glClear(GL_COLOR_BUFFER_BIT);
+
+        // Change color dynamically.
+        float greenColor = .5f * sin(5 * glfwGetTime()) + .5f;   // vary between 0 to 1.
+        program->SetUniform("u_color", greenColor);
 
         // Render.
         glDrawElements(GL_TRIANGLES, ibo->Count(), GL_UNSIGNED_INT, 0);

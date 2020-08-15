@@ -7,6 +7,7 @@
 #include <sstream>
 #include <fstream>
 #include <cassert>
+#include <unordered_map>
 
 Shader::Shader(const std::string& shaderSourcePath)
 {
@@ -107,4 +108,30 @@ unsigned int Shader::CompileShader(unsigned int type, const std::string& source)
     }
 
     return shader;
+}
+
+int Shader::GetUniformLocation(const std::string& uniformName)const
+{
+    if (uniformLocationCache.count(uniformName))
+        return uniformLocationCache[uniformName];
+
+    int location = glGetUniformLocation(m_id, uniformName.c_str());
+    if (location != -1)
+        uniformLocationCache[uniformName] = location;
+    else
+    {
+        std::cout << "[Uniform Error] Uniform name <" << uniformName 
+        << "> cannot be located in the currently bound shader program." << std::endl;
+        assert(false);
+    }
+    return location;
+}
+
+void Shader::SetUniform(const std::string& uniformName, float value)
+{
+    int location = GetUniformLocation(uniformName);
+    if (location != -1)
+        glUniform1f(location, value);
+    else
+        assert(false);
 }
