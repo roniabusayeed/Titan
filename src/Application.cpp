@@ -12,6 +12,7 @@
 #include "VertexBufferLayout.h"
 #include "VertexArray.h"
 #include "IndexBuffer.h"
+#include "Renderer.h"
 
 #define WINDOW_WIDTH 800
 #define WINDOW_HEIGHT 600
@@ -32,6 +33,14 @@ void ProcessInput(GLFWwindow* window)
 
     if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS)
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+}
+
+// Maximum number of vertex attributes supported on this hardware.
+int MaxVertexAttributes()
+{
+    int maxAttribsCount;
+    glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &maxAttribsCount);
+    return maxAttribsCount;
 }
 
 int main(void)
@@ -85,41 +94,35 @@ int main(void)
         1, 2, 3,
     };
 
-    // VBO
-    VertexBuffer* vb = new VertexBuffer(vertices, sizeof(vertices));
-
+    // Buffers.
+    VertexBuffer vb = VertexBuffer(vertices, sizeof(vertices));
     VertexBufferLayout layout;
     layout.Push<float>(3);
     layout.Push<float>(3);
-
-    VertexArray* vao = new VertexArray(*vb, layout);
-    
-
-    IndexBuffer* ibo = new IndexBuffer(indices, 6);
-    vao->Bind();
-    ibo->Bind();
+    VertexArray vao =  VertexArray(vb, layout);
+    IndexBuffer ibo =  IndexBuffer(indices, 6);
 
     // Shader.
-    Shader* program = new Shader(SHADER_PATH);
-    program->Bind(); // Binding once (outside render loop) as we are not gonna use other shaders for now.
+    Shader program = Shader(SHADER_PATH);
+
+    Renderer renderer;
     
     // Maximum vertex attributes suported on this machine's hardware.
-    int maxVertexAttribs;
-    glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, & maxVertexAttribs);
-    std::cout << "Max vertex attributes: " << maxVertexAttribs << std::endl;
+    std::cout << "Max vertex attributes : " << MaxVertexAttributes() << std::endl;
 
     // Render loop.
     while (!glfwWindowShouldClose(window))
     {
         ProcessInput(window);
-        glClear(GL_COLOR_BUFFER_BIT);
+        renderer.Clear();
 
         // Change color dynamically.
         float greenColor = .5f * sin(5 * glfwGetTime()) + .5f;   // vary between 0 to 1.
-        program->SetUniform("u_color", greenColor);
+        program.Bind();
+        program.SetUniform("u_color", greenColor);
 
         // Render.
-        glDrawElements(GL_TRIANGLES, ibo->Count(), GL_UNSIGNED_INT, 0);
+        renderer.Draw(vao, ibo, program);
 
         // Swap buffers and poll events.
         glfwSwapBuffers(window);
@@ -127,10 +130,6 @@ int main(void)
     }
 
     // Clean up.
-    delete vb;
-    delete vao;
-    delete ibo;
-    delete program;
     glfwTerminate();
     return 0;
 }
