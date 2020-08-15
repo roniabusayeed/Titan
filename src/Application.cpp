@@ -8,6 +8,8 @@
 
 #include "Shader.h"
 #include "VertexBuffer.h"
+#include "VertexBufferLayout.h"
+#include "VertexArray.h"
 
 #define WINDOW_WIDTH 800
 #define WINDOW_HEIGHT 600
@@ -68,20 +70,15 @@ int main(void)
          .5f, -.5f, 0.f,    0.f, 0.f, 1.f,
     };
 
-    // VAO.
-    unsigned int vao;
-    glGenVertexArrays(1, &vao);
-
     // VBO
     VertexBuffer* vb = new VertexBuffer(vertices, sizeof(vertices));
-    vb->Bind();
 
-    glBindVertexArray(vao);
-    glVertexAttribPointer(0, 3, GL_FLOAT, false, 6 * sizeof(float), (const void*)0);    // tracked by vao.
-    glEnableVertexAttribArray(0);   // tracked by vao.
-    glVertexAttribPointer(1, 3, GL_FLOAT, false, 6 * sizeof(float), (const void*)(3 * sizeof(float)));  // tracked by vao.
-    glEnableVertexAttribArray(1);   // tracked by vao.
-    glBindVertexArray(0);
+    VertexBufferLayout layout;
+    layout.Push<float>(3);
+    layout.Push<float>(3);
+
+    VertexArray* vao = new VertexArray(*vb, layout);
+    vao->Bind();
 
     // Shader.
     Shader* program = new Shader(SHADER_PATH);
@@ -95,7 +92,6 @@ int main(void)
         glClear(GL_COLOR_BUFFER_BIT);
 
         // Render.
-        glBindVertexArray(vao); // Bind vao.
         glDrawArrays(GL_TRIANGLES, 0, 3);   // Issue draw call.
 
         // Swap buffers and poll events.
@@ -105,7 +101,7 @@ int main(void)
 
     // Clean up.
     delete vb;
-    glDeleteVertexArrays(1, &vao);
+    delete vao;
     delete program;
     glfwTerminate();
     return 0;
