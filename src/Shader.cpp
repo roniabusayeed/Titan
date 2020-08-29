@@ -135,3 +135,12 @@ void Shader::SetUniform(const std::string& uniformName, float value)
     else
         assert(false);
 }
+
+void Shader::SetUniform(const std::string& uniformName, int value)
+{
+    int location = GetUniformLocation(uniformName);
+    if (location != -1)
+        glUniform1i(location, value);
+    else
+        assert(false);
+}
